@@ -1,35 +1,68 @@
-/* ==================== STYLE.CSS HOÀN HẢO 2025 – CHỈ CẦN 1 FILE ==================== */
+/* ---------------------------------------------------
+   RESET CHUNG
+--------------------------------------------------- */
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  font-family: "Segoe UI", Tahoma, sans-serif;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: 'Poppins', sans-serif;
 }
 
 body {
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  color: #333;
-  min-height: 100vh;
-  line-height: 1.6;
+    background: url('donor.png') no-repeat center center fixed;
+    background-size: cover;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 100vh;
+    backdrop-filter: brightness(0.85);
 }
 
-/* Header đỏ máu */
+/* ---------------------------------------------------
+   HEADER (DÙNG CHUNG)
+--------------------------------------------------- */
 header {
-  background: linear-gradient(90deg, #c31432, #d9534f);
-  color: white;
-  padding: 25px 40px;
-  text-align: center;
-  position: relative;
-  box-shadow: 0 6px 20px rgba(195, 20, 50, 0.4);
+    width: 100%;
+    text-align: center;
+    background: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(6px);
+    padding: 20px 0;
+    position: relative;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.2);
 }
 
 header h1 {
-  font-size: 32px;
-  font-weight: 700;
+    color: #fff;
+    font-size: 2.2em;
+    font-weight: 700;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.4);
 }
 
-/* Nút Dashboard & Đăng xuất */
-header a {
+header button {
+    position: absolute;
+    right: 30px;
+    top: 50%;
+    transform: translateY(-50%);
+    background-image: linear-gradient(315deg, #ff5f6d 0%, #ffc371 74%);
+    border: none;
+    padding: 10px 18px;
+    color: white;
+    font-size: 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+header button:hover {
+    transform: translateY(-50%) scale(1.05);
+    opacity: 0.9;
+}
+/* Nút chung trên header (Dashboard, Logout…) */
+header a,
+header button,
+.logout-btn {
   position: absolute;
   right: 30px;
   top: 50%;
@@ -40,15 +73,19 @@ header a {
   color: white;
   text-decoration: none;
   font-weight: 600;
+  border: none;
+  cursor: pointer;
   transition: 0.3s;
 }
 
-header a:hover {
+header a:hover,
+header button:hover,
+.logout-btn:hover {
   background: white;
   color: #d9534f;
 }
 
-/* Thanh menu ngang */
+/* ==================== MENU (NAV BAR) ==================== */
 nav {
   background: white;
   padding: 20px 40px;
@@ -81,14 +118,14 @@ nav a:hover {
   box-shadow: 0 8px 20px rgba(217, 83, 79, 0.4);
 }
 
-/* Container chính */
+/* ==================== CONTAINER ==================== */
 .container {
   max-width: 1300px;
   margin: 0 auto;
   padding: 0 20px;
 }
 
-/* Bảng dữ liệu siêu đẹp */
+/* ==================== TABLE (INDEX) ==================== */
 table {
   width: 100%;
   border-collapse: collapse;
@@ -118,7 +155,18 @@ tr:hover {
   background: #fdf2f2;
 }
 
-/* NÚT THÊM MỚI SIÊU ĐẸP – TỰ ĐỘNG HIỆN DƯỚI BẢNG */
+a {
+  text-decoration: none;
+  color: #007bff;
+  transition: 0.3s;
+  font-weight: bold;
+}
+
+a:hover {
+  color: #d9534f;
+}
+
+/* Nút thêm mới */
 .add-new-btn {
   display: block;
   width: fit-content;
@@ -132,48 +180,64 @@ tr:hover {
   border-radius: 50px;
   box-shadow: 0 12px 30px rgba(195, 20, 50, 0.5);
   transition: all 0.4s;
-  text-align: center;
 }
 
 .add-new-btn:hover {
   transform: translateY(-8px) scale(1.05);
   box-shadow: 0 20px 40px rgba(195, 20, 50, 0.6);
-  background: linear-gradient(45deg, #a00, #c00);
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  nav ul {
-    flex-direction: column;
-    align-items: center;
-  }
-  header h1 {
-    font-size: 24px;
-  }
-  .add-new-btn {
-    font-size: 20px;
-    padding: 18px 40px;
-  }
-  table,
-  thead,
-  th,
-  td,
-  tr {
-    display: block;
-  }
-  th {
-    display: none;
-  }
-  td {
-    padding: 12px;
-    text-align: right;
-    position: relative;
-  }
-  td::before {
-    content: attr(data-label);
-    position: absolute;
-    left: 10px;
-    font-weight: bold;
-    color: #d9534f;
-  }
+/* ==================== FORM ADD / EDIT DONOR ==================== */
+.form-container,
+.main-box,
+.auth-box {
+  width: 90%;
+  max-width: 450px;
+  background: rgba(255, 255, 255, 0.95);
+  padding: 30px;
+  border-radius: 12px;
+  margin: 50px auto;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.25);
 }
+
+.form-container h1,
+.main-box h2,
+.auth-box h2 {
+  text-align: center;
+  margin-bottom: 20px;
+  font-weight: 700;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 600;
+}
+
+input,
+select {
+  width: 100%;
+  padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin-bottom: 15px;
+}
+
+/* Nút submit */
+button.submit-btn,
+.btn-submit,
+.auth-box button {
+  width: 100%;
+  padding: 12px;
+  background: #007bff;
+  border: none;
+  color: white;
+  cursor: pointer;
+  border-radius: 6px;
+  font-size: 16px;
+  font-weight: bold;
+  transition: 0.3s;
+}
+
+button.submit-btn:hover,
+.btn-submit

@@ -1,7 +1,11 @@
 <?php
 session_start();
 require_once 'config.php';
-if (!hasPermission($_SESSION['role'] ?? '', ['admin','staff'])) { header('Location: index.php'); exit; }
+
+if (!hasPermission($_SESSION['role'] ?? '', ['admin','staff'])) { 
+    header('Location: index.php'); 
+    exit; 
+}
 
 $error = '';
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
@@ -11,40 +15,114 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     $pdo->beginTransaction();
 
-    // Health check
+    /* ========================
+       1) HEALTH CHECK
+    ======================== */
     $is_normal = (floatval($_POST['hemoglobin']) >= 12.5 && floatval($_POST['weight']) >= 45) ? 1 : 0;
-    $hc_stmt = $pdo->prepare("INSERT INTO health_checks (donor_id, weight, blood_pressure, heart_rate, temperature, hemoglobin, is_normal, notes, staff_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
-    $hc_stmt->execute([$donor_id, $_POST['weight'], $_POST['blood_pressure'], $_POST['heart_rate'], $_POST['temperature'], $_POST['hemoglobin'], $is_normal, $notes, $_SESSION['user_id']]);
+
+    $hc_stmt = $pdo->prepare("
+        INSERT INTO health_checks 
+            (donor_id, weight, blood_pressure, heart_rate, temperature, hemoglobin, is_normal, notes, staff_id)
+        VALUES 
+            (?, ?, ?, ?, ?, ?, ?, ?, ?)
+    ");
+    $hc_stmt->execute([
+        $donor_id,
+        $_POST['weight'],
+        $_POST['blood_pressure'],
+        $_POST['heart_rate'],
+        $_POST['temperature'],
+        $_POST['hemoglobin'],
+        $is_normal,
+        $notes,
+        $_SESSION['user_id']
+    ]);
+
     $health_check_id = $pdo->lastInsertId();
 
-    // Donation
+    /* ========================
+       2) DONATION
+    ======================== */
     $donation_code = generateCode('DON');
-    $don_stmt = $pdo->prepare("INSERT INTO donations (donor_id, health_check_id, donation_code, donation_date, volume_ml, blood_type_collected, notes, staff_id, status) VALUES (?, ?, ?, NOW(), ?, (SELECT blood_type FROM donors WHERE id=?), ?, ?, 'completed')");
-    $don_stmt->execute([$donor_id, $health_check_id, $donation_code, $volume_ml, $donor_id, $notes, $_SESSION['user_id']]);
+
+    $don_stmt = $pdo->prepare("
+        INSERT INTO donations 
+            (donor_id, health_check_id, donation_code, donation_date, volume_ml, blood_type_collected, notes, staff_id, status)
+        VALUES 
+            (?, ?, ?, NOW(), ?, (SELECT blood_type FROM donors WHERE id = ?), ?, ?, 'completed')
+    ");
+    $don_stmt->execute([
+        $donor_id,
+        $health_check_id,
+        $donation_code,
+        $volume_ml,
+        $donor_id,
+        $notes,
+        $_SESSION['user_id']
+    ]);
+
     $donation_id = $pdo->lastInsertId();
 
-    // Auto inventory
+    /* ========================
+       3) INVENTORY
+    ======================== */
     $bag_code = generateCode('BAG');
-    $expiry_date = date('Y-m-d', strtotime('+35 days'));
-    $inv_stmt = $pdo->prepare("INSERT INTO blood_inventory (donation_id, blood_bag_code, blood_type, volume_ml, collection_date, expiry_date, storage_location, status) VALUES (?, ?, (SELECT blood_type FROM donors WHERE id=?), ?, CURDATE(), ?, 'Kho A', 'available')");
-    $inv_stmt->execute([$donation_id, $bag_code, $donor_id, $volume_ml, $expiry_date]);
+    $expiry_date = date('Y-m-d', strtotime('+35 days')); // 35 ngày lưu trữ RBC
 
-    // Update donor
-    $pdo->prepare("UPDATE donors SET total_donations = total_donations + 1, last_donation_date = CURDATE() WHERE id = ?")->execute([$donor_id]);
+    $inv_stmt = $pdo->prepare("
+        INSERT INTO blood_inventory
+            (donation_id, blood_bag_code, blood_type, volume_ml, collection_date, expiry_date, storage_location, status)
+        VALUES
+            (?, ?, (SELECT blood_type FROM donors WHERE id = ?), ?, CURDATE(), ?, 'Kho A', 'available')
+    ");
+    $inv_stmt->execute([
+        $donation_id,
+        $bag_code,
+        $donor_id,
+        $volume_ml,
+        $expiry_date
+    ]);
+
+    /* ========================
+       4) UPDATE DONOR
+    ======================== */
+    $pdo->prepare("
+        UPDATE donors 
+        SET total_donations = total_donations + 1,
+            last_donation_date = CURDATE()
+        WHERE id = ?
+    ")->execute([$donor_id]);
 
     $pdo->commit();
 
-    // Send notification
-    $donor_user_id = $pdo->prepare("SELECT user_id FROM donors WHERE id = ?")->execute([$donor_id]) ? $pdo->fetchColumn() : null;
+    /* ========================
+       5) SEND NOTIFICATION
+    ======================== */
+    $stmt = $pdo->prepare("SELECT user_id FROM donors WHERE id = ?");
+    $stmt->execute([$donor_id]);
+    $donor_user_id = $stmt->fetchColumn();  // <--- FIX CHUẨN
+
     if ($donor_user_id) {
-        sendNotification($donor_user_id, "Hiến máu thành công", "Cảm ơn bạn đã hiến $volume_ml ml máu hôm nay! Mã donation: $donation_code");
+        sendNotification(
+            $donor_user_id,
+            "Hiến máu thành công",
+            "Cảm ơn bạn đã hiến $volume_ml ml máu hôm nay! Mã donation: $donation_code"
+        );
     }
-    sendNotification($_SESSION['user_id'], "Ghi nhận hiến máu", "Hiến máu từ người ID $donor_id đã ghi nhận.");
+
+    sendNotification(
+        $_SESSION['user_id'],
+        "Ghi nhận hiến máu",
+        "Hiến máu từ người ID $donor_id đã được ghi nhận."
+    );
 
     header('Location: donations.php');
     exit;
 }
 
+/* ========================
+   LẤY DANH SÁCH NGƯỜI HIẾN
+======================== */
 $donors = $pdo->query("SELECT id, code, full_name, blood_type FROM donors")->fetchAll();
 ?>
 
@@ -57,12 +135,15 @@ $donors = $pdo->query("SELECT id, code, full_name, blood_type FROM donors")->fet
 <body>
     <h1>Ghi nhận hiến máu mới</h1>
     <a href="donations.php">Quay lại</a>
+
     <form method="POST">
-        <label>Người hién</label>
+        <label>Người hiến</label>
         <select name="donor_id" required>
             <option value="">-- Chọn --</option>
             <?php foreach($donors as $d): ?>
-                <option value="<?= $d['id'] ?>">[<?= $d['code'] ?>] <?= htmlspecialchars($d['full_name']) ?> - <?= $d['blood_type'] ?></option>
+                <option value="<?= $d['id'] ?>">
+                    [<?= $d['code'] ?>] <?= htmlspecialchars($d['full_name']) ?> - <?= $d['blood_type'] ?>
+                </option>
             <?php endforeach; ?>
         </select>
 

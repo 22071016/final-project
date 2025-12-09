@@ -3,7 +3,7 @@
 $host = 'localhost';
 $dbname = 'blood_donation';
 $username = 'root';
-$password = '040903'; // Thay bằng mật khẩu nếu có
+$password = '12345678'; // Thay bằng mật khẩu nếu có
 
 try {
     $pdo = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $username, $password);
