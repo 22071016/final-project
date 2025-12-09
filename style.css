@@ -1,0 +1,179 @@
+/* ==================== STYLE.CSS HOÀN HẢO 2025 – CHỈ CẦN 1 FILE ==================== */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Segoe UI", Tahoma, sans-serif;
+}
+
+body {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+  color: #333;
+  min-height: 100vh;
+  line-height: 1.6;
+}
+
+/* Header đỏ máu */
+header {
+  background: linear-gradient(90deg, #c31432, #d9534f);
+  color: white;
+  padding: 25px 40px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 6px 20px rgba(195, 20, 50, 0.4);
+}
+
+header h1 {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+/* Nút Dashboard & Đăng xuất */
+header a {
+  position: absolute;
+  right: 30px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: rgba(255, 255, 255, 0.2);
+  padding: 12px 25px;
+  border-radius: 30px;
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+header a:hover {
+  background: white;
+  color: #d9534f;
+}
+
+/* Thanh menu ngang */
+nav {
+  background: white;
+  padding: 20px 40px;
+  box-shadow: 0 3px 15px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+nav ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 15px;
+  list-style: none;
+}
+
+nav a {
+  padding: 14px 25px;
+  background: #f8f9fa;
+  color: #d9534f;
+  text-decoration: none;
+  border-radius: 30px;
+  font-weight: 600;
+  transition: 0.3s;
+}
+
+nav a:hover {
+  background: #d9534f;
+  color: white;
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(217, 83, 79, 0.4);
+}
+
+/* Container chính */
+.container {
+  max-width: 1300px;
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* Bảng dữ liệu siêu đẹp */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 15px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  margin: 30px 0;
+}
+
+th {
+  background: linear-gradient(90deg, #c31432, #d9534f);
+  color: white;
+  padding: 18px;
+  text-align: center;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+td {
+  padding: 16px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+tr:hover {
+  background: #fdf2f2;
+}
+
+/* NÚT THÊM MỚI SIÊU ĐẸP – TỰ ĐỘNG HIỆN DƯỚI BẢNG */
+.add-new-btn {
+  display: block;
+  width: fit-content;
+  margin: 40px auto;
+  padding: 20px 60px;
+  background: linear-gradient(45deg, #c31432, #d9534f);
+  color: white;
+  font-size: 24px;
+  font-weight: bold;
+  text-decoration: none;
+  border-radius: 50px;
+  box-shadow: 0 12px 30px rgba(195, 20, 50, 0.5);
+  transition: all 0.4s;
+  text-align: center;
+}
+
+.add-new-btn:hover {
+  transform: translateY(-8px) scale(1.05);
+  box-shadow: 0 20px 40px rgba(195, 20, 50, 0.6);
+  background: linear-gradient(45deg, #a00, #c00);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  nav ul {
+    flex-direction: column;
+    align-items: center;
+  }
+  header h1 {
+    font-size: 24px;
+  }
+  .add-new-btn {
+    font-size: 20px;
+    padding: 18px 40px;
+  }
+  table,
+  thead,
+  th,
+  td,
+  tr {
+    display: block;
+  }
+  th {
+    display: none;
+  }
+  td {
+    padding: 12px;
+    text-align: right;
+    position: relative;
+  }
+  td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 10px;
+    font-weight: bold;
+    color: #d9534f;
+  }
+}

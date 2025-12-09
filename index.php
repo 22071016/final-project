@@ -1,74 +1,89 @@
 <?php
-session_start();
 
-// ⭐ Nếu chưa có session thì kiểm tra cookie để auto login
-if (!isset($_SESSION['user'])) {
-    if (isset($_COOKIE['logged_user'])) {
-        $_SESSION['user'] = $_COOKIE['logged_user'];
+// index.php - Dashboard
+session_start();
+require_once 'config.php';
+
+if (!isset($_SESSION['user_id'])) {
+    if (isset($_COOKIE['remember_user'])) {
+        $userId = $_COOKIE['remember_user'];
+        $stmt = $pdo->prepare("SELECT * FROM users WHERE id = ?");
+        $stmt->execute([$userId]);
+        $user = $stmt->fetch();
+        if ($user) {
+            $_SESSION['user_id'] = $user['id'];
+            $_SESSION['role'] = $user['role'];
+            $_SESSION['name'] = $user['name'];
+        } else {
+            header('Location: login.php');
+            exit;
+        }
     } else {
-        header("Location: login.php");
-        exit();
+        header('Location: login.php');
+        exit;
     }
 }
 
-require_once 'config.php';
-
-// Lấy danh sách người hiến máu từ bảng donors
-$stmt = $pdo->query("SELECT * FROM donors");
-$donors = $stmt->fetchAll(PDO::FETCH_ASSOC);
-if (!$donors) $donors = [];
+$role = $_SESSION['role'];
+$userId = $_SESSION['user_id'];
+// === THÊM ĐOẠN NÀY: ĐẾM SỐ THÔNG BÁO CHƯA ĐỌC ===
+$unread_count = $pdo->prepare("SELECT COUNT(*) FROM notifications WHERE user_id = ? AND is_read = 0");
+$unread_count->execute([$userId]);
+$unread = $unread_count->fetchColumn();
 ?>
+
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Donor Management</title>
+    <title>Dashboard - Quản lý Hiến máu</title>
     <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
     <header>
-        <h1>Donor Management</h1>
-
-        <button onclick="window.location.href='add_donor.php'">+ Add Donor</button>
-
-        <a href="logout.php" class="logout-btn">Logout</a>
+        <h1>Quản lý Hiến máu</h1>
+        <span>Xin chào, <?php echo htmlspecialchars($_SESSION['name']); ?> (<?php echo $role; ?>)</span>
+        <a href="logout.php">Đăng xuất</a>
     </header>
-
-    <table>
-        <thead>
-            <tr>
-                <th>No</th>
-                <th>Code</th>
-                <th>Name</th>
-                <th>Blood Type</th>
-                <th>Phone Number</th>
-                <th>Status</th>
-                <th></th>
-            </tr>
-        </thead>
-
-        <tbody>
-            <?php if (empty($donors)): ?>
-                <tr><td colspan="7">No donor data available.</td></tr>
-            <?php else: ?>
-                <?php foreach ($donors as $index => $donor): ?>
-                    <tr>
-                        <td><?= $index + 1 ?></td>
-                        <td><?= htmlspecialchars($donor['code']) ?></td>
-                        <td><?= htmlspecialchars($donor['name']) ?></td>
-                        <td><?= htmlspecialchars($donor['blood_type']) ?></td>
-                        <td><?= htmlspecialchars($donor['phone_number']) ?></td>
-                        <td><?= htmlspecialchars($donor['status']) ?></td>
-                        <td>
-                            <a href="edit_donor.php?id=<?= $donor['id'] ?>">Edit</a> |
-                            <a href="delete_donor.php?id=<?= $donor['id'] ?>" onclick="return confirm('Are you sure to delete this donor?')">Delete</a>
-                        </td>
-                    </tr>
-                <?php endforeach; ?>
+    
+    <nav>
+        <ul>
+            <?php if (hasPermission($role, ['admin', 'staff'])): ?>
+                <li><a href="donors.php">Quản lý Người hiến</a></li>
+                <li><a href="appointments.php">Quản lý Lịch hẹn</a></li>
+                <li><a href="donations.php">Quản lý Lần hiến</a></li>
+                <li><a href="health_checks.php">Quản lý Kiểm tra sức khỏe</a></li>
+                <li><a href="blood_inventory.php">Quản lý Tồn kho máu</a></li>
             <?php endif; ?>
-        </tbody>
-    </table>
+
+            <li>
+                <a href="notifications.php">
+                    Thông báo 
+                    <?php if ($unread > 0): ?>
+                        <span style="background:#e74c3c; color:white; padding:3px 9px; border-radius:50%; font-size:12px; font-weight:bold;">
+                            <?= $unread ?>
+                        </span>
+                    <?php endif; ?>
+                </a>
+            </li>
+
+            <?php if ($role === 'donor'): ?>
+                <li><a href="my_donations.php">Lịch sử hiến máu của tôi</a></li>
+                <li><a href="my_appointments.php">Lịch hẹn của tôi</a></li>
+            <?php endif; ?>
+        </ul>
+    </nav>
+
+    <main>
+        <h2>Chào mừng đến với hệ thống!</h2>
+        <!-- Thống kê nhanh -->
+        <?php if (hasPermission($role, ['admin', 'staff'])): ?>
+            <?php
+            $totalDonors = $pdo->query("SELECT COUNT(*) FROM donors")->fetchColumn();
+            $totalDonations = $pdo->query("SELECT COUNT(*) FROM donations")->fetchColumn();
+            ?>
+            <p>Tổng người hiến: <?php echo $totalDonors; ?></p>
+            <p>Tổng lần hiến: <?php echo $totalDonations; ?></p>
+        <?php endif; ?>
+    </main>
 </body>
 </html>

@@ -1,59 +1,81 @@
 <?php
+// add_donor.php
 session_start();
-if (!isset($_SESSION['user'])) {
-    header("Location: login.php");
-    exit();
-}
 require_once 'config.php';
 
-if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $code = $_POST['code'];
-    $name = $_POST['name'];
+if (!hasPermission($_SESSION['role'], ['admin', 'staff'])) {
+    header('Location: index.php');
+    exit;
+}
+
+$error = '';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+    $full_name = trim($_POST['full_name']);
+    $phone = trim($_POST['phone']);
+    $email = trim($_POST['email']);
+    $date_of_birth = $_POST['date_of_birth'];
+    $gender = $_POST['gender'];
+    $address = trim($_POST['address']);
     $blood_type = $_POST['blood_type'];
-    $phone_number = $_POST['phone_number'];
-    $status = $_POST['status'];
+    $weight = $_POST['weight'];
+    $code = generateCode('HN');
 
-    $stmt = $pdo->prepare("INSERT INTO donors (code, name, blood_type, phone_number, status) VALUES (?, ?, ?, ?, ?)");
-    $stmt->execute([$code, $name, $blood_type, $phone_number, $status]);
-
-    header("Location: index.php");
-    exit();
+    // Kiểm tra trùng code/phone
+    $check = $pdo->prepare("SELECT id FROM donors WHERE code = ? OR phone = ?");
+    $check->execute([$code, $phone]);
+    if ($check->rowCount() > 0) {
+        $error = "Code hoặc số điện thoại đã tồn tại!";
+    } else {
+        $stmt = $pdo->prepare("INSERT INTO donors (code, full_name, phone, email, date_of_birth, gender, address, blood_type, weight) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
+        $stmt->execute([$code, $full_name, $phone, $email, $date_of_birth, $gender, $address, $blood_type, $weight]);
+        header('Location: donors.php');
+        exit;
+    }
 }
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Add Donor</title>
-   <link rel="stylesheet" href="style.css">
-
-
+    <title>Thêm Người hiến</title>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="form-container">
-        <h1>Add Donor</h1>
-        <form action="add_donor.php" method="POST">
-            <label for="code">Code</label>
-            <input type="text" name="code" required>
+    <header><h1>Thêm Người hiến</h1><a href="donors.php">Trở về</a></header>
+    <?php if ($error): ?><p style="color:red; text-align:center;"><?= $error ?></p><?php endif; ?>
+    <form action="add_donor.php" method="POST">
+        <label for="full_name">Họ tên</label>
+        <input type="text" name="full_name" required>
 
-            <label for="name">Name</label>
-            <input type="text" name="name" required>
+        <label for="phone">Số điện thoại</label>
+        <input type="text" name="phone" required>
 
-            <label for="blood_type">Blood Type</label>
-            <input type="text" name="blood_type" required>
+        <label for="email">Email</label>
+        <input type="email" name="email">
 
-            <label for="phone_number">Phone Number</label>
-            <input type="text" name="phone_number" required>
+        <label for="date_of_birth">Ngày sinh</label>
+        <input type="date" name="date_of_birth" required>
 
-            <label for="status">Status</label>
-            <input type="text" name="status" required>
+        <label for="gender">Giới tính</label>
+        <select name="gender" required>
+            <option value="male">Nam</option>
+            <option value="female">Nữ</option>
+            <option value="other">Khác</option>
+        </select>
 
-            <button type="submit">Add Donor</button>
-        </form>
-        <a href="index.php" class="back">← Back to list</a>
-    </div>
+        <label for="address">Địa chỉ</label>
+        <textarea name="address"></textarea>
+
+        <label for="blood_type">Nhóm máu</label>
+        <select name="blood_type" required>
+            <option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option>
+        </select>
+
+        <label for="weight">Cân nặng (kg)</label>
+        <input type="number" name="weight" step="0.1">
+
+        <button type="submit">Thêm</button>
+    </form>
 </body>
 </html>
-
