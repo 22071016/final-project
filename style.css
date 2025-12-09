@@ -240,4 +240,59 @@ button.submit-btn,
 }
 
 button.submit-btn:hover,
-.btn-submit
+.btn-submit:hover,
+.auth-box button:hover {
+  background: #0056b3;
+}
+
+/* Link trở lại */
+a.back {
+  display: block;
+  text-align: center;
+  margin-top: 15px;
+  font-weight: 600;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+  nav ul {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  header h1 {
+    font-size: 24px;
+  }
+
+  .add-new-btn {
+    font-size: 20px;
+    padding: 18px 40px;
+  }
+
+  /* Table responsive */
+  table,
+  thead,
+  th,
+  td,
+  tr {
+    display: block;
+  }
+
+  th {
+    display: none;
+  }
+
+  td {
+    text-align: right;
+    padding: 12px;
+    position: relative;
+  }
+
+  td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 10px;
+    font-weight: bold;
+    color: #d9534f;
+  }
+}
