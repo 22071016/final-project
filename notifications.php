@@ -1,11 +1,7 @@
 <?php
-session_start();
 require_once 'config.php';
-
-if (isset($_GET['read'])) {
-    $stmt = $pdo->prepare("UPDATE notifications SET is_read = 1 WHERE id = ? AND user_id = ?");
-    $stmt->execute([$_GET['read'], $_SESSION['user_id']]);
-    header('Location: notifications.php');
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
     exit;
 }
 
@@ -15,28 +11,29 @@ $notifications = $stmt->fetchAll();
 ?>
 
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
-    <title>Thông báo</title>
+    <title>Notifications</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header><h1>Thông báo</h1><a href="index.php">Trở về</a></header>
-    <ul>
+    <header>
+        <h1>Notifications</h1>
+        <a href="index.php">Dashboard</a>
+    </header>
+
+    <div class="container">
         <?php if (empty($notifications)): ?>
-            <li style="text-align:center">Chưa có thông báo nào</li>
+            <p style="text-align:center;">No notifications yet.</p>
         <?php else: ?>
-            <?php foreach ($notifications as $notif): ?>
-                <li style="background: <?= $notif['is_read'] ? '#f4f4f4' : '#ffdddd' ?>; padding:10px; margin:10px 0; border-radius:5px;">
-                    <h3><?= htmlspecialchars($notif['title']) ?></h3>
-                    <p><?= htmlspecialchars($notif['message']) ?></p>
-                    <small><?= date('d/m/Y H:i', strtotime($notif['created_at'])) ?></small>
-                    <?php if (!$notif['is_read']): ?>
-                        <a href="?read=<?= $notif['id'] ?>" style="color:red">Đánh dấu đã đọc</a>
-                    <?php endif; ?>
-                </li>
+            <?php foreach ($notifications as $n): ?>
+                <div class="card" style="<?= $n['is_read'] ? '' : 'border-left: 5px solid #d9534f;' ?>">
+                    <h3><?= htmlspecialchars($n['title']) ?></h3>
+                    <p><?= nl2br(htmlspecialchars($n['message'])) ?></p>
+                    <small>Received: <?= date('M d, Y H:i', strtotime($n['created_at'])) ?></small>
+                </div>
             <?php endforeach; ?>
         <?php endif; ?>
-    </ul>
+    </div>
 </body>
 </html>
